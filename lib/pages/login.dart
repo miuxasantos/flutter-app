@@ -1,10 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_school/pages/registrar_usuario.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   LoginPage({super.key});
 
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
   bool _isObscure = true;
+
+  final _formKey = GlobalKey<FormState>();
+
+  TextEditingController _emailController = new TextEditingController();
+  TextEditingController _passwordController = new TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -35,61 +46,130 @@ class LoginPage extends StatelessWidget {
                     )
                   ],
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        image: DecorationImage(
-                          image: AssetImage('assets/miku2.webp'),
-                          fit: BoxFit.cover,
+                
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          image: DecorationImage(
+                            image: AssetImage('assets/miku2.webp'),
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
-                    ),
-                    SizedBox(height: 20),
-                    TextField(
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
-                        labelText: 'Email',
-                        prefixIcon: IconButton(
-                          onPressed: () {},
-                          icon: FaIcon(FontAwesomeIcons.solidEnvelope),
+                      SizedBox(height: 20),
+                      TextFormField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: InputDecoration(
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.blue),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.pink, width: 2),
+                          ),
+                          labelText: 'Email',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          prefixIcon: IconButton(
+                            onPressed: () {},
+                            icon: FaIcon(FontAwesomeIcons.solidEnvelope),
+                          ),
+                          suffixIcon: IconButton(onPressed: () {
+                            _emailController.clear();
+                          },
+                            icon: FaIcon(FontAwesomeIcons.xmark, color: Colors.red,)
                           )
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    TextField(
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        labelText: 'Senha',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Text("Não possui cadastro? Clique aqui!", 
-                        style: TextStyle(
-                          color: Colors.blue,
-                          decoration: TextDecoration.underline,
-                          fontWeight: FontWeight.bold
                         ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () {},
-                        label: Text("Entrar"),
-                        icon: Icon(Icons.login),
+                        validator: (value) {
+                          if(value == null || value.isEmpty) {
+                            return 'Por favor, insira seu email';
+                          } else if (!value.contains('@') || !value.contains('.')) {
+                            return 'Por favor, insira um email válido';
+                          }
+                          return null;
+                        },
                       ),
-                    )
-                  ],
+                      SizedBox(height: 20),
+                      TextFormField(
+                        obscureText: true,
+                        controller: _passwordController,
+                        decoration: InputDecoration(
+                          labelText: 'Senha',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.blue),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.deepPurple, width: 2),
+                          ),
+                          prefixIcon: IconButton(
+                            onPressed: () {},
+                            icon: FaIcon(FontAwesomeIcons.lock),
+                          ),
+                          suffixIcon: IconButton(
+                            onPressed: () {
+                              setState(() {
+                                _isObscure = !_isObscure;
+                              });
+                            },
+                            icon: FaIcon(_isObscure ? FontAwesomeIcons.eyeSlash : FontAwesomeIcons.eye)
+                          )
+                        ),
+                        validator: (value) {
+                          if(value == null || value.isEmpty) {
+                            return 'Por favor, insira sua senha';
+                          } else if(value.length < 6) {
+                            return 'A senha deve conter no mínimo 6 caracteres';
+                          }
+                          return null;
+                        },
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(context, MaterialPageRoute(builder: (context) => RegistrarUsuario()));
+                            },
+                            child:
+                              Text("Não possui cadastro? Clique aqui!", 
+                              style: TextStyle(
+                                color: Colors.blue,
+                                decoration: TextDecoration.underline,
+                                fontWeight: FontWeight.bold
+                              ),
+                              ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 20),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            if(_formKey.currentState!.validate()) {
+                                print("Login realizado com sucesso!");
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("Verique o formulário"), backgroundColor: Colors.red, duration: Duration(seconds: 2))
+                              );
+                            }
+                          },
+                          label: Text("Entrar"),
+                          icon: Icon(Icons.login),
+                        ),
+                      )
+                    ],
+                  ),
                 )
               )
             ],
