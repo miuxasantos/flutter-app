@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_school/pages/registrar_usuario.dart';
+import 'package:flutter_school/services/login_usuario_service.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class LoginPage extends StatefulWidget {
@@ -10,9 +11,10 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  bool _isObscure = true;
-  
+  final _loginUsuarioService = LoginUsuarioService();
   final _formKey = GlobalKey<FormState>();
+  bool _isObscure = true;
+  bool _isLoading = false;
 
   TextEditingController _emailController = new TextEditingController();
   TextEditingController _passwordController = new TextEditingController();
@@ -155,20 +157,49 @@ class _LoginPageState extends State<LoginPage> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
-                          onPressed: () {
-                            if(_formKey.currentState!.validate()) {
-                                print("Login realizado com sucesso!");
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("Verique o formulário"), backgroundColor: Colors.red, duration: Duration(seconds: 2))
+                          onPressed: _isLoading ? null : () async {
+                            if(!_formKey.currentState!.validate()) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("Verique o formulário! Email ou senha não podem ficar vazios."), backgroundColor: Colors.red, duration: Duration(seconds: 2))
                               );
+                            } else {
+                              setState(() {
+                                _isLoading = true;
+                              });
+
+                              var response = await _loginUsuarioService.loginUsuario(
+                                _emailController.text, 
+                                _passwordController.text
+                              );
+
+                              if(response.message == null || response.message!.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("Login realizado com sucesso"), backgroundColor: Colors.green,)
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("Erro ao realizar login: ${response.message}"), backgroundColor: Colors.red,)
+                                );
+                              }
+                              await Future.delayed(Duration(seconds: 5));
+                              setState(() {
+                                _isLoading = false; 
+                              });
                             }
                           },
-                          label: Text("Entrar"),
-                          icon: Icon(Icons.login),
+                          label: Text(
+                            _isLoading ? "Registrando..." : "Registrar",
+                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                          ),
+                          icon: _isLoading ? CircularProgressIndicator(
+                            backgroundColor: Colors.white,
+                            color: Colors.green,
+                          ) : FaIcon(FontAwesomeIcons.userPlus, size: 20,),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green,
-                            foregroundColor: Colors.white,)
+                            foregroundColor: Colors.white,
+                          ),
+                          iconAlignment: IconAlignment.end,
                         ),
                       )
                     ],
