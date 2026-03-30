@@ -11,7 +11,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   bool _isObscure = true;
-
+  
   final _formKey = GlobalKey<FormState>();
 
   TextEditingController _emailController = new TextEditingController();
@@ -166,6 +166,9 @@ class _LoginPageState extends State<LoginPage> {
                           },
                           label: Text("Entrar"),
                           icon: Icon(Icons.login),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,)
                         ),
                       )
                     ],

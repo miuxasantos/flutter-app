@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:flutter_school/services/registrar_usuario_service.dart';
 
 class RegistrarUsuario extends StatefulWidget {
   const RegistrarUsuario({super.key});
 
   @override
-  State<RegistrarUsuario> createState() => _MyWidgetState();
+  State<RegistrarUsuario> createState() => _RegistrarUsuarioState();
   
 }
 
-class _MyWidgetState extends State<RegistrarUsuario> {
+class _RegistrarUsuarioState extends State<RegistrarUsuario> {
   final _formKey = GlobalKey<FormState>();
+  final _registrarUsuarioService = RegistrarUsuarioService();
+  bool _isLoading = false;
 
   TextEditingController _nomeController = new TextEditingController();
   TextEditingController _emailController = new TextEditingController();
@@ -24,20 +27,10 @@ class _MyWidgetState extends State<RegistrarUsuario> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          children: [
-            FaIcon(FontAwesomeIcons.userPlus, color: Colors.black,),
-            SizedBox(width: 10),
-            Text("Registrar Usuário", 
-                style: TextStyle(color: Colors.white,
-                fontSize: 25,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
+        title: Text("Registrar Usuário"),
         backgroundColor: Colors.deepPurpleAccent,
         foregroundColor: Colors.white,
+        centerTitle: true,
       ),
       body: Container(
         padding: EdgeInsets.all(30),
@@ -67,7 +60,7 @@ class _MyWidgetState extends State<RegistrarUsuario> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("Registrar Uusário"),
+                  Text("Registrar Uusário", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),),
                   SizedBox(height: 20),
                   TextFormField(
                       controller: _nomeController,
@@ -170,23 +163,54 @@ class _MyWidgetState extends State<RegistrarUsuario> {
                   SizedBox(
                     width: double.infinity,
                     height: 60,
-                    child: ElevatedButton.icon(onPressed:  () {
+                    child: ElevatedButton.icon(onPressed: _isLoading ? null : () async {
                       if (!_formKey.currentState!.validate()) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text("Verifique o formulário"), backgroundColor: Colors.red,),
                         );
+                      } else {
+                        setState(() {
+                          _isLoading = true;
+                        });
+
+                        var response = await _registrarUsuarioService.registrarUsuario(
+                          _nomeController.text,
+                          _emailController.text,
+                          _passwordController.text,
+                        );
+
+                        if(response.message == null || response.message!.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Usuário registrado com sucesso"), backgroundColor: Colors.green,)
+                          );
+                          Navigator.pop(context);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Erro ao registrar usuário: ${response.message}"), backgroundColor: Colors.red,)
+                          );
                       }
+                      await Future.delayed(Duration(seconds: 5));
+                      setState(() {
+                        _isLoading = false; 
+                      });
+                    }
+
                     }, 
-                      icon: FaIcon(FontAwesomeIcons.userPlus, size: 20,),
-                      label: Text("Registrar", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurpleAccent,
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                        textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
+                    label: Text(
+                      _isLoading ? "Registrando..." : "Registrar",
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
                     ),
-                  )
+                    icon: _isLoading ? CircularProgressIndicator(
+                      backgroundColor: Colors.white,
+                      color: Colors.green,
+                    ) : FaIcon(FontAwesomeIcons.userPlus, size: 20,),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blueAccent,
+                        foregroundColor: Colors.white,
+                      ),
+                      iconAlignment: IconAlignment.end,
+                    )
+                    ),
                 ],
               ),
             ),
